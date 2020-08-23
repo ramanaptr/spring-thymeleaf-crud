@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Add visitor</title>
+
+    <link th:href="@{/styles/css/style.css}" rel="stylesheet" />
+</head>
+
+<body>
+
+    <form th:action="@{/add}" th:object="${visitor}" method="post">
+
+        <div>
+            <input readonly id="id" type="number" th:field="${visitor.id}" placeholder="Id">
+            <span th:if="${#fields.hasErrors('id')}" th:errors="${visitor.id}"></span>
+        </div>
+
+        <div>
+            <input id="name" type="text" th:field="${visitor.name}" placeholder="Name">
+            <span th:if="${#fields.hasErrors('name')}" th:errors="${visitor.name}"></span>
+        </div>
+
+        <div>
+            <input id="age" type="number" th:field="${visitor.age}" placeholder="Age">
+            <span th:if="${#fields.hasErrors('age')}" th:errors="${visitor.age}"></span>
+        </div>
+
+        <div>
+            <select id="province" class="form-control" th:field="${visitor.province.id}" th:onchange="'fetchDistrict()'">
+            <option value="0">Select Provinces</option>
+            <option th:each="administrative : ${provinces}" th:value="${administrative.id}" th:text="${administrative.name}"></option>
+        </select>
+            <span th:if="${#fields.hasErrors('province')}" th:errors="${visitor.province.name}"></span>
+        </div>
+
+        <div>
+            <select id="district" class="form-control" th:field="${visitor.district.id}" th:onchange="'fetchCity()'">
+            <option value="0">Select District</option>
+        </select>
+            <span th:if="${#fields.hasErrors('district')}" th:errors="${visitor.district.name}"></span>
+        </div>
+
+        <div>
+            <select id="city" class="form-control" th:field="${visitor.city.id}">
+            <option value="0">Select City</option>
+        </select>
+            <span th:if="${#fields.hasErrors('city')}" th:errors="${visitor.city.name}"></span>
+        </div>
+
+        <button type="submit" th:text="${btnText}" th:onclick="'save()'">Add Visitor</button>
+        <span th:text="${msg}" th:style="'margin:20px;'"></span>
+    </form>
+
+    <!--Table Visitor-->
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Province</th>
+                <th>District</th>
+                <th>City</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="visitor : ${visitors}">
+                <td th:text="${visitor.id}"></td>
+                <td th:text="${visitor.name}"></td>
+                <td th:text="${visitor.age}"></td>
+                <td th:text="${visitor.province.name}"></td>
+                <td th:text="${visitor.district.name}"></td>
+                <td th:text="${visitor.city.name}"></td>
+                <td>
+                    <form th:action="@{/edit}" method="post">
+                        <button th:name="id" th:value="${visitor.id}" type="submit">Edit</button>
+                    </form>
+                    <form th:action="@{/delete}" method="post">
+                        <button th:name="id" th:value="${visitor.id}" type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!--<div>-->
+    <!--    <div th:text="${visitor.name}"></div>-->
+    <!--    <div th:text="${visitor.age}"></div>-->
+    <!--</div>-->
+
+    <script>
+        // Test Javascript with LocalSctorage session
+        function save() {
+            localStorage.setItem('visitor', 'check local storage visitor for lyfe');
+        }
+
+        const fetchDistrict = async() => {
+            try {
+                const options = {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: null
+                };
+
+                const response = await fetch(`http://localhost/district`, options);
+                const responseJson = await response.json();
+
+                if (response) {
+                    responseJson.districts.forEach(district => {
+                        const options = document.createElement("option");
+                        options.text = district.name;
+                        options.value = district.id;
+
+                        const select = document.getElementById("district");
+                        select.appendChild(options)
+                    })
+                    return
+                }
+
+                alert('Cannot fetch the data')
+            } catch (error) {
+                alert(error);
+            }
+        };
+
+        const fetchCity = async() => {
+            try {
+                const options = {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: null
+                };
+
+                const eSelected = document.getElementById("district");
+                const selectedIndex = eSelected.selectedIndex
+                const districtId = eSelected.options[selectedIndex].value
+                console.log("Selected id: ", districtId)
+
+                const response = await fetch(`http://localhost/city/${districtId}`, options);
+                const responseJson = await response.json();
+
+                if (response) {
+                    responseJson.citys.forEach(district => {
+
+                        const options = document.createElement("option");
+                        options.text = district.name;
+                        options.value = district.id;
+
+                        const select = document.getElementById("city");
+                        select.appendChild(options)
+                    })
+                    return
+                }
+
+                alert('Cannot fetch the data')
+            } catch (error) {
+                alert(error);
+            }
+        };
+    </script>
+
+</body>
+
+</html>
